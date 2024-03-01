@@ -14,14 +14,10 @@ func main() {
 
 	filename := flag.Arg(0)
 
-	file, err := os.Open(filename)
+	content, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatalf("Failed to open %s: %s\n", filename, err.Error())
+		log.Fatalf("Failed to read %s: %s\n", filename, err.Error())
 	}
-	defer file.Close()
 
-	content := make([]byte, 9999999)
-	n, err := file.Read(content)
-
-	fmt.Printf("%d %s\n", n, filename)
+	fmt.Printf("%d %s\n", len(content), filename)
 }
