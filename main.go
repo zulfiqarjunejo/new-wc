@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
-	_ = flag.Bool("c", false, "count number of bytes")
+	c := flag.Bool("c", false, "count number of bytes")
+	l := flag.Bool("l", false, "count number of lines")
 
 	flag.Parse()
 
@@ -19,5 +21,10 @@ func main() {
 		log.Fatalf("Failed to read %s: %s\n", filename, err.Error())
 	}
 
-	fmt.Printf("%d %s\n", len(content), filename)
+	if *c {
+		fmt.Printf("  %d %s\n", len(content), filename)
+	} else if *l {
+		lines := strings.Split(string(content), "\n")
+		fmt.Printf("  %d %s\n", len(lines)-1, filename)
+	}
 }
