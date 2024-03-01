@@ -11,6 +11,7 @@ import (
 func main() {
 	c := flag.Bool("c", false, "count number of bytes")
 	l := flag.Bool("l", false, "count number of lines")
+	w := flag.Bool("w", false, "count number of words")
 
 	flag.Parse()
 
@@ -26,5 +27,13 @@ func main() {
 	} else if *l {
 		lines := strings.Split(string(content), "\n")
 		fmt.Printf("  %d %s\n", len(lines)-1, filename)
+	} else if *w {
+		var wordCount int
+		lines := strings.Split(string(content), "\n")
+		for _, line := range lines {
+			wordsInLine := strings.Fields(line)
+			wordCount += len(wordsInLine)
+		}
+		fmt.Printf("  %d %s\n", wordCount, filename)
 	}
 }
