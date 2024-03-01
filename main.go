@@ -12,6 +12,7 @@ func main() {
 	c := flag.Bool("c", false, "count number of bytes")
 	l := flag.Bool("l", false, "count number of lines")
 	w := flag.Bool("w", false, "count number of words")
+	m := flag.Bool("m", false, "counter number of characters")
 
 	flag.Parse()
 
@@ -35,5 +36,7 @@ func main() {
 			wordCount += len(wordsInLine)
 		}
 		fmt.Printf("  %d %s\n", wordCount, filename)
+	} else if *m {
+		fmt.Printf("  %d %s\n", len(content), filename)
 	}
 }
