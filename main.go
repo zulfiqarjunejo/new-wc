@@ -1,67 +1,73 @@
 package main
 
 import (
+	"bufio"
 	"flag"
-	"fmt"
+	"io"
 	"log"
 	"os"
-	"strings"
+	"unicode"
 )
 
-type CountCollection struct {
-	Bytes      int
-	Characters int
-	Lines      int
-	Words      int
+func getCountsOf(filename string) (Counts, error) {
+	var counts Counts
+
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Printf("getCountsOf(%s) failed to open file\n", filename)
+		return counts, err
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	var previousCharacterAsRune rune
+	for {
+		characterAsRune, size, err := reader.ReadRune()
+		if err != nil {
+			if err == io.EOF {
+				if previousCharacterAsRune != rune(0) && !unicode.IsSpace(previousCharacterAsRune) {
+					counts.NumberOfWords++
+				}
+				break
+			}
+			return counts, nil
+		}
+
+		if characterAsRune == rune('\n') {
+			counts.NumberOfLines++
+		} else if !unicode.IsSpace(previousCharacterAsRune) && unicode.IsSpace(characterAsRune) {
+			counts.NumberOfWords++
+		}
+
+		counts.NumberOfBytes += size
+		counts.NumberOfCharacters++
+
+		previousCharacterAsRune = characterAsRune
+	}
+
+	return counts, nil
 }
 
 func main() {
-	c := flag.Bool("c", false, "count number of bytes")
-	l := flag.Bool("l", false, "count number of lines")
-	w := flag.Bool("w", false, "count number of words")
-	m := flag.Bool("m", false, "counter number of characters")
+	var cpo CountPrinterOpts
+
+	flag.BoolVar(&cpo.ShouldPrintNumberOfBytes, "c", false, "count number of bytes")
+	flag.BoolVar(&cpo.ShouldPrintNumberOfCharacters, "m", false, "counter number of characters")
+	flag.BoolVar(&cpo.ShouldPrintNumberOfLines, "l", false, "count number of lines")
+	flag.BoolVar(&cpo.ShouldPrintNumberOfWords, "w", false, "count number of words")
 
 	flag.Parse()
 
 	filename := flag.Arg(0)
 
-	content, err := os.ReadFile(filename)
+	counts, err := getCountsOf(filename)
 	if err != nil {
-		log.Fatalf("Failed to read %s: %s\n", filename, err.Error())
+		log.Fatalf("Could not compute counts of file %s\n", filename)
 	}
 
-	cc := CountCollection{}
-
-	cc.Bytes = len(content)
-	cc.Characters = len(content)
-
-	lines := strings.Split(string(content), "\n")
-	cc.Lines = len(lines) - 1
-
-	var wordCount int
-	for _, line := range lines {
-		wordsInLine := strings.Fields(line)
-		wordCount += len(wordsInLine)
+	countPrinter := CountPrinter{
+		Opts: cpo,
 	}
-
-	cc.Words = wordCount
-
-	if *c {
-		fmt.Printf("  %d %s\n", len(content), filename)
-	} else if *l {
-		lines := strings.Split(string(content), "\n")
-		fmt.Printf("  %d %s\n", len(lines)-1, filename)
-	} else if *w {
-		var wordCount int
-		lines := strings.Split(string(content), "\n")
-		for _, line := range lines {
-			wordsInLine := strings.Fields(line)
-			wordCount += len(wordsInLine)
-		}
-		fmt.Printf("  %d %s\n", wordCount, filename)
-	} else if *m {
-		fmt.Printf("  %d %s\n", len(content), filename)
-	} else {
-		fmt.Printf("  %d %d %d %s\n", cc.Lines, cc.Words, cc.Bytes, filename)
-	}
+	countPrinter.Print(counts, filename)
 }
