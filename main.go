@@ -9,15 +9,8 @@ import (
 	"unicode"
 )
 
-func getCountsOf(filename string) (Counts, error) {
+func getCountsOf(file *os.File) (Counts, error) {
 	var counts Counts
-
-	file, err := os.Open(filename)
-	if err != nil {
-		log.Printf("getCountsOf(%s) failed to open file\n", filename)
-		return counts, err
-	}
-	defer file.Close()
 
 	reader := bufio.NewReader(file)
 
@@ -49,6 +42,14 @@ func getCountsOf(filename string) (Counts, error) {
 	return counts, nil
 }
 
+func openFile(filename string) (*os.File, error) {
+	if filename == "" {
+		return os.Stdin, nil
+	}
+
+	return os.Open(filename)
+}
+
 func main() {
 	var cpo CountPrinterOpts
 
@@ -61,7 +62,13 @@ func main() {
 
 	filename := flag.Arg(0)
 
-	counts, err := getCountsOf(filename)
+	file, err := openFile(filename)
+	if err != nil {
+		log.Fatalf("Failed to open %s\n", filename)
+	}
+	defer file.Close()
+
+	counts, err := getCountsOf(file)
 	if err != nil {
 		log.Fatalf("Could not compute counts of file %s\n", filename)
 	}
