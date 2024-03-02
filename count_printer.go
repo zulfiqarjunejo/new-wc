@@ -30,6 +30,6 @@ func (cp CountPrinter) Print(c Counts, filename string) {
 	} else if cp.Opts.ShouldPrintNumberOfWords {
 		fmt.Printf("  %d %s\n", c.NumberOfWords, filename)
 	} else {
-		fmt.Printf("\n  %d %d %d %s\n", c.NumberOfLines, c.NumberOfWords, c.NumberOfBytes, filename)
+		fmt.Printf("  %d %d %d %s\n", c.NumberOfLines, c.NumberOfWords, c.NumberOfBytes, filename)
 	}
 }
